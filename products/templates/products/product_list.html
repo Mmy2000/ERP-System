@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Products{% endblock %}
+{% block page_title %}Products{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h5 class="fw-bold mb-0">Product Catalog</h5>
+        <p class="text-muted small mb-0">Manage your inventory</p>
+    </div>
+    {% if user.is_staff or user.is_superuser %}
+    <a href="{% url 'products_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i>Add Product
+    </a>
+    {% endif %}
+</div>
+
+<!-- Search Bar -->
+<div class="card mb-4">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-6">{{ search_form.q }}</div>
+            <div class="col-md-3">{{ search_form.category }}</div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-search me-1"></i>Search</button>
+                <a href="{% url 'products_list' %}" class="btn btn-outline-secondary"><i class="bi bi-x"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Product Grid -->
+<div class="row g-3">
+    {% for product in products %}
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <div class="card h-100">
+            {% if product.image %}
+            <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height:160px;object-fit:cover;border-radius:12px 12px 0 0">
+            {% else %}
+            <div class="d-flex align-items-center justify-content-center bg-light" style="height:100px;border-radius:12px 12px 0 0">
+                <i class="bi bi-box-seam text-muted" style="font-size:2.5rem"></i>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <span class="badge rounded-pill text-bg-light text-muted small">{{ product.category }}</span>
+                    {% if product.is_low_stock %}
+                    <span class="badge bg-danger rounded-pill small">Low Stock</span>
+                    {% endif %}
+                </div>
+                <h6 class="fw-semibold mb-1">{{ product.name }}</h6>
+                <div class="text-muted small mb-2">SKU: {{ product.sku }}</div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-primary">${{ product.selling_price|floatformat:2 }}</span>
+                    <span class="small {% if product.is_low_stock %}stock-low{% else %}stock-ok{% endif %}">
+                        <i class="bi bi-boxes me-1"></i>{{ product.stock_qty }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent d-flex gap-1">
+                <a href="{% url 'products_detail' product.pk %}" class="btn btn-sm btn-light flex-fill">View</a>
+                {% if user.is_staff or user.is_superuser %}
+                <a href="{% url 'products_update' product.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                <a href="{% url 'products_delete' product.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5 text-muted">
+        <i class="bi bi-box fs-1 d-block mb-2"></i>
+        No products found.
+        {% if user.is_staff %}<a href="{% url 'products_create' %}">Add your first product</a>{% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">Previous</a></li>
+        {% endif %}
+        <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">Next</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
