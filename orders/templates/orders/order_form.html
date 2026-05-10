@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Create Order{% endblock %}
+{% block page_title %}Create Sales Order{% endblock %}
+
+{% block extra_css %}
+<style>
+    .item-row { background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 8px; border: 1px solid #e2e8f0; }
+    .item-row.deleted { display: none; }
+    #add-item-btn { border: 2px dashed #cbd5e1; color: #64748b; background: transparent; }
+    #add-item-btn:hover { background: #f1f5f9; border-color: #94a3b8; }
+    .line-total { font-weight: 600; color: #6366f1; min-width: 100px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'order_list' %}" class="btn btn-sm btn-light"><i class="bi bi-arrow-left me-1"></i>Back to Orders</a>
+</div>
+
+<form method="post" id="order-form">
+    {% csrf_token %}
+    <div class="row g-3">
+        <!-- Order Header -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header"><h6 class="mb-0 fw-semibold"><i class="bi bi-info-circle me-2 text-muted"></i>Order Details</h6></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Customer <span class="text-danger">*</span></label>
+                        {{ form.customer }}
+                        {% if form.customer.errors %}<div class="text-danger small mt-1">{{ form.customer.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Order Date <span class="text-danger">*</span></label>
+                        {{ form.order_date }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Notes</label>
+                        {{ form.notes }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-semibold">Order Total</span>
+                        <span class="fs-5 fw-bold text-primary" id="grand-total">$0.00</span>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-check-circle me-1"></i>Create Order
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h6 class="mb-0 fw-semibold"><i class="bi bi-list-ul me-2 text-muted"></i>Order Items</h6>
+                </div>
+                <div class="card-body">
+                    <!-- Formset management -->
+                    {{ item_formset.management_form }}
+
+                    <div id="item-formset">
+                        {% for item_form in item_formset %}
+                        <div class="item-row" id="item-{{ forloop.counter0 }}">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-md-5">
+                                    <label class="form-label small fw-semibold">Product</label>
+                                    {{ item_form.product }}
+                                    {{ item_form.DELETE }}
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label small fw-semibold">Qty</label>
+                                    {{ item_form.qty }}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold">Unit Price</label>
+                                    {{ item_form.price }}
+                                </div>
+                                <div class="col-md-1 text-end">
+                                    <label class="form-label small fw-semibold">Total</label>
+                                    <div class="line-total small" id="line-total-{{ forloop.counter0 }}">$0.00</div>
+                                </div>
+                                <div class="col-md-1 text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-item-btn" data-index="{{ forloop.counter0 }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% if item_form.errors %}
+                            <div class="text-danger small mt-1">{{ item_form.errors }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <button type="button" id="add-item-btn" class="btn w-100 mt-2 py-2">
+                        <i class="bi bi-plus-circle me-1"></i>Add Item
+                    </button>
+
+                    {% if item_formset.non_form_errors %}
+                    <div class="alert alert-danger mt-2 small py-2">{{ item_formset.non_form_errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Product price data (injected from DB on page load via AJAX-like approach)
+const productPrices = {};
+
+// Auto-fill price when product is selected
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('product-select')) {
+        const row = e.target.closest('.item-row');
+        const priceInput = row.querySelector('input[name$="-price"]');
+        const selectedOption = e.target.options[e.target.selectedIndex];
+        // Price hint from data attribute if available
+        if (selectedOption.dataset.price) {
+            priceInput.value = selectedOption.dataset.price;
+        }
+        recalculate();
+    }
+    if (e.target.name && (e.target.name.endsWith('-qty') || e.target.name.endsWith('-price'))) {
+        recalculate();
+    }
+});
+
+document.addEventListener('input', function(e) {
+    if (e.target.name && (e.target.name.endsWith('-qty') || e.target.name.endsWith('-price'))) {
+        recalculate();
+    }
+});
+
+function recalculate() {
+    let grand = 0;
+    document.querySelectorAll('.item-row:not(.deleted)').forEach((row, i) => {
+        const qty = parseFloat(row.querySelector('input[name$="-qty"]')?.value) || 0;
+        const price = parseFloat(row.querySelector('input[name$="-price"]')?.value) || 0;
+        const total = qty * price;
+        grand += total;
+        const totalEl = row.querySelector('[id^="line-total-"]');
+        if (totalEl) totalEl.textContent = '$' + total.toFixed(2);
+    });
+    document.getElementById('grand-total').textContent = '$' + grand.toFixed(2);
+}
+
+// Remove item row
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-item-btn')) {
+        const btn = e.target.closest('.remove-item-btn');
+        const row = btn.closest('.item-row');
+        const deleteInput = row.querySelector('input[name$="-DELETE"]');
+        if (deleteInput) {
+            deleteInput.checked = true;
+            row.classList.add('deleted');
+        } else {
+            row.remove();
+        }
+        recalculate();
+    }
+});
+
+// Add new item row
+let formCount = parseInt(document.getElementById('id_items-TOTAL_FORMS').value);
+
+document.getElementById('add-item-btn').addEventListener('click', function() {
+    const container = document.getElementById('item-formset');
+    const firstRow = container.querySelector('.item-row');
+    if (!firstRow) return;
+
+    const newRow = firstRow.cloneNode(true);
+    newRow.id = 'item-' + formCount;
+
+    newRow.querySelectorAll('input, select').forEach(el => {
+        el.name = el.name.replace(/-\d+-/, '-' + formCount + '-');
+        el.id = el.id.replace(/-\d+-/, '-' + formCount + '-');
+        if (el.type !== 'checkbox') el.value = '';
+        if (el.type === 'checkbox') el.checked = false;
+    });
+
+    const totalEl = newRow.querySelector('[id^="line-total-"]');
+    if (totalEl) {
+        totalEl.id = 'line-total-' + formCount;
+        totalEl.textContent = '$0.00';
+    }
+
+    container.appendChild(newRow);
+    formCount++;
+    document.getElementById('id_items-TOTAL_FORMS').value = formCount;
+});
+
+// Set today's date as default
+const dateInput = document.querySelector('input[type="date"]');
+if (dateInput && !dateInput.value) {
+    dateInput.value = new Date().toISOString().split('T')[0];
+}
+
+recalculate();
+</script>
+{% endblock %}

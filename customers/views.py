@@ -41,7 +41,7 @@ class CustomerCreateView(SalesOrAdminMixin, CreateView):
     model = Customer
     form_class = CustomerForm
     template_name = 'customers/customer_form.html'
-    success_url = reverse_lazy('customers:list')
+    success_url = reverse_lazy('customer_list')
 
     def form_valid(self, form):
         try:
@@ -64,7 +64,7 @@ class CustomerUpdateView(SalesOrAdminMixin, UpdateView):
     model = Customer
     form_class = CustomerForm
     template_name = 'customers/customer_form.html'
-    success_url = reverse_lazy('customers:list')
+    success_url = reverse_lazy('customer_list')
 
     def form_valid(self, form):
         try:
@@ -86,7 +86,7 @@ class CustomerDeleteView(AdminRequiredMixin, DeleteView):
     """Only admins can delete customers."""
     model = Customer
     template_name = 'customers/customer_confirm_delete.html'
-    success_url = reverse_lazy('customers:list')
+    success_url = reverse_lazy('customer_list')
 
     def form_valid(self, form):
         CustomerService.delete(self.object)

@@ -75,7 +75,7 @@ class OrderCreateView(SalesOrAdminMixin, CreateView):
                 notes=form.cleaned_data.get('notes', ''),
             )
             messages.success(self.request, f'Order {order.order_number} created successfully.')
-            return redirect(reverse('orders:detail', kwargs={'pk': order.pk}))
+            return redirect(reverse('order_detail', kwargs={'pk': order.pk}))
         except (ValidationError, Exception) as e:
             messages.error(self.request, f'Error creating order: {e}')
             return self.render_to_response(self.get_context_data(form=form))
@@ -95,7 +95,7 @@ class OrderConfirmView(SalesOrAdminMixin, View):
             messages.success(request, f'Order {order.order_number} confirmed. Stock updated.')
         except ValidationError as e:
             messages.error(request, str(e))
-        return redirect(reverse('orders:detail', kwargs={'pk': pk}))
+        return redirect(reverse('order_detail', kwargs={'pk': pk}))
 
 
 class OrderCancelView(SalesOrAdminMixin, View):
@@ -108,4 +108,4 @@ class OrderCancelView(SalesOrAdminMixin, View):
             messages.success(request, f'Order {order.order_number} cancelled.')
         except ValidationError as e:
             messages.error(request, str(e))
-        return redirect(reverse('orders:detail', kwargs={'pk': pk}))
+        return redirect(reverse('order_detail', kwargs={'pk': pk}))

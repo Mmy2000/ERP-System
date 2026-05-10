@@ -43,7 +43,7 @@ class ProductCreateView(AdminRequiredMixin, CreateView):
     model = Product
     form_class = ProductForm
     template_name = 'products/product_form.html'
-    success_url = reverse_lazy('products:list')
+    success_url = reverse_lazy('products_list')
 
     def form_valid(self, form):
         try:
@@ -65,7 +65,7 @@ class ProductUpdateView(AdminRequiredMixin, UpdateView):
     model = Product
     form_class = ProductForm
     template_name = 'products/product_form.html'
-    success_url = reverse_lazy('products:list')
+    success_url = reverse_lazy('products_list')
 
     def form_valid(self, form):
         try:
@@ -86,7 +86,7 @@ class ProductUpdateView(AdminRequiredMixin, UpdateView):
 class ProductDeleteView(AdminRequiredMixin, DeleteView):
     model = Product
     template_name = 'products/product_confirm_delete.html'
-    success_url = reverse_lazy('products:list')
+    success_url = reverse_lazy('products_list')
 
     def form_valid(self, form):
         ProductService.delete(self.object)

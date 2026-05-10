@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ product.name }}{% endblock %}
+{% block page_title %}Product Detail{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{% url 'products_list' %}" class="btn btn-sm btn-light mb-2">
+            <i class="bi bi-arrow-left me-1"></i>Back to Products
+        </a>
+        <h5 class="fw-bold mb-0">{{ product.name }}</h5>
+        <span class="text-muted small">SKU: {{ product.sku }}</span>
+    </div>
+    {% if user.is_staff or user.is_superuser %}
+    <div class="d-flex gap-2">
+        <a href="{% url 'products_update' product.pk %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-pencil me-1"></i>Edit
+        </a>
+        <a href="{% url 'products_delete' product.pk %}" class="btn btn-outline-danger btn-sm">
+            <i class="bi bi-trash me-1"></i>Delete
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card text-center p-3">
+            {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="max-height:250px;object-fit:cover">
+            {% else %}
+            <div class="d-flex align-items-center justify-content-center bg-light rounded" style="height:200px">
+                <i class="bi bi-box-seam text-muted" style="font-size:4rem"></i>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted small fw-semibold">SKU</dt>
+                    <dd class="col-sm-8">{{ product.sku }}</dd>
+
+                    <dt class="col-sm-4 text-muted small fw-semibold">Category</dt>
+                    <dd class="col-sm-8"><span class="badge text-bg-light">{{ product.category }}</span></dd>
+
+                    <dt class="col-sm-4 text-muted small fw-semibold">Cost Price</dt>
+                    <dd class="col-sm-8">${{ product.cost_price|floatformat:2|intcomma }}</dd>
+
+                    <dt class="col-sm-4 text-muted small fw-semibold">Selling Price</dt>
+                    <dd class="col-sm-8 fw-bold text-primary">${{ product.selling_price|floatformat:2|intcomma }}</dd>
+
+                    <dt class="col-sm-4 text-muted small fw-semibold">Profit Margin</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge {% if product.profit_margin >= 20 %}bg-success{% elif product.profit_margin >= 10 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                            {{ product.profit_margin|floatformat:1 }}%
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-4 text-muted small fw-semibold">Stock Qty</dt>
+                    <dd class="col-sm-8">
+                        <span class="fw-bold {% if product.is_low_stock %}text-danger{% else %}text-success{% endif %} fs-5">
+                            {{ product.stock_qty }}
+                        </span>
+                        {% if product.is_low_stock %}
+                        <span class="badge bg-danger ms-1 rounded-pill">Low Stock</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-4 text-muted small fw-semibold">Status</dt>
+                    <dd class="col-sm-8">
+                        {% if product.is_active %}
+                        <span class="badge bg-success rounded-pill">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary rounded-pill">Inactive</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-4 text-muted small fw-semibold">Last Updated</dt>
+                    <dd class="col-sm-8 text-muted small">{{ product.updated_at|date:"M d, Y H:i" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-header">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-arrow-left-right me-2 text-muted"></i>Stock Movement History</h6>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-3">Date</th>
+                    <th>Type</th>
+                    <th>Qty</th>
+                    <th>Reference</th>
+                    <th>User</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for movement in product.movements.all|slice:":20" %}
+                <tr>
+                    <td class="ps-3 text-muted small">{{ movement.timestamp|date:"M d, Y H:i" }}</td>
+                    <td>
+                        <span class="badge rounded-pill
+                            {% if movement.movement_type == 'sale' %}bg-danger
+                            {% elif movement.movement_type == 'return' %}bg-success
+                            {% elif movement.movement_type == 'purchase' %}bg-primary
+                            {% else %}bg-secondary{% endif %}">
+                            {{ movement.get_movement_type_display }}
+                        </span>
+                    </td>
+                    <td class="fw-semibold {% if movement.qty > 0 %}text-success{% else %}text-danger{% endif %}">
+                        {% if movement.qty > 0 %}+{% endif %}{{ movement.qty }}
+                    </td>
+                    <td class="small">{{ movement.reference|default:"—" }}</td>
+                    <td class="small text-muted">{{ movement.user.username|default:"System" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center text-muted py-4">No stock movements recorded.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

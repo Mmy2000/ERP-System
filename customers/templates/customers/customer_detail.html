@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ customer.name }}{% endblock %}
+{% block page_title %}Customer Detail{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{% url 'customer_list' %}" class="text-muted small text-decoration-none">
+            <i class="bi bi-arrow-left me-1"></i>Back to Customers
+        </a>
+        <h5 class="fw-bold mb-0 mt-1">{{ customer.name }}</h5>
+        <span class="badge bg-light text-dark">{{ customer.customer_code }}</span>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'customer_update' customer.pk %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-pencil me-1"></i>Edit
+        </a>
+        {% if user.is_staff or user.is_superuser %}
+        <a href="{% url 'customer_delete' customer.pk %}" class="btn btn-outline-danger btn-sm">
+            <i class="bi bi-trash me-1"></i>Delete
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><h6 class="mb-0 fw-semibold"><i class="bi bi-person me-2 text-muted"></i>Customer Info</h6></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-5 text-muted small">Code</dt>
+                    <dd class="col-7 fw-semibold">{{ customer.customer_code }}</dd>
+                    <dt class="col-5 text-muted small">Name</dt>
+                    <dd class="col-7">{{ customer.name }}</dd>
+                    <dt class="col-5 text-muted small">Email</dt>
+                    <dd class="col-7">{{ customer.email|default:"—" }}</dd>
+                    <dt class="col-5 text-muted small">Phone</dt>
+                    <dd class="col-7">{{ customer.phone|default:"—" }}</dd>
+                    <dt class="col-5 text-muted small">Address</dt>
+                    <dd class="col-7">{{ customer.address|default:"—" }}</dd>
+                    <dt class="col-5 text-muted small">Opening Bal.</dt>
+                    <dd class="col-7">${{ customer.opening_balance|floatformat:2|intcomma }}</dd>
+                    <dt class="col-5 text-muted small">Status</dt>
+                    <dd class="col-7">
+                        {% if customer.is_active %}
+                        <span class="badge bg-success rounded-pill">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary rounded-pill">Inactive</span>
+                        {% endif %}
+                    </dd>
+                    <dt class="col-5 text-muted small">Member Since</dt>
+                    <dd class="col-7 small text-muted">{{ customer.created_at|date:"M d, Y" }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Summary stats -->
+        <div class="row g-2 mt-1">
+            <div class="col-6">
+                <div class="card text-center p-3">
+                    <div class="fs-3 fw-bold text-primary">{{ customer.total_orders }}</div>
+                    <div class="text-muted small">Total Orders</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card text-center p-3">
+                    <div class="fs-4 fw-bold text-success">${{ customer.total_spent|floatformat:0|intcomma }}</div>
+                    <div class="text-muted small">Total Spent</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h6 class="mb-0 fw-semibold"><i class="bi bi-receipt me-2 text-muted"></i>Recent Orders</h6>
+                <a href="{% url 'order_create' %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus me-1"></i>New Order
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Order #</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td class="ps-3 fw-semibold text-primary">{{ order.order_number }}</td>
+                            <td>{{ order.order_date|date:"M d, Y" }}</td>
+                            <td>${{ order.total_amount|floatformat:2|intcomma }}</td>
+                            <td><span class="badge rounded-pill badge-{{ order.status }}">{{ order.get_status_display }}</span></td>
+                            <td><a href="{% url 'order_detail' order.pk %}" class="btn btn-sm btn-light py-0 px-2"><i class="bi bi-arrow-right"></i></a></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted py-4">No orders yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

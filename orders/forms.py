@@ -59,7 +59,7 @@ class BaseOrderItemFormSet(BaseFormSet):
 OrderItemFormSet = formset_factory(
     OrderItemForm,
     formset=BaseOrderItemFormSet,
-    extra=1,
+    extra=0,
     can_delete=True,
     min_num=1,
     validate_min=True,

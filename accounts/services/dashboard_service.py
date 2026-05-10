@@ -21,7 +21,7 @@ class DashboardService:
             status='confirmed'
         ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
 
-        orders_today = SalesOrder.objects.filter(order_date=today).count()
+        orders_today = SalesOrder.objects.filter(order_date=today, status='confirmed').count()
 
         low_stock_products = Product.objects.filter(stock_qty__lte=10, is_active=True)
         low_stock_count = low_stock_products.count()
