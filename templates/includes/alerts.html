@@ -1,0 +1,58 @@
+{% if messages %}
+<div class="container-fluid mb-4">
+
+    {% for message in messages %}
+
+    <div class="alert 
+        {% if message.tags == 'success' %}
+            alert-success auto-dismiss
+        {% elif message.tags == 'warning' %}
+            alert-warning
+        {% elif message.tags == 'info' %}
+            alert-info
+        {% else %}
+            alert-danger
+        {% endif %}
+        alert-dismissible fade show shadow-sm rounded-3"
+        role="alert"
+    >
+
+        <div class="d-flex align-items-center">
+
+            {% if message.tags == 'success' %}
+                <i class="bi bi-check-circle-fill me-2"></i>
+            {% elif message.tags == 'warning' %}
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {% elif message.tags == 'info' %}
+                <i class="bi bi-info-circle-fill me-2"></i>
+            {% else %}
+                <i class="bi bi-x-circle-fill me-2"></i>
+            {% endif %}
+
+            <span>{{ message }}</span>
+
+        </div>
+
+        <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+        ></button>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+<script>
+    setTimeout(() => {
+        document.querySelectorAll('.auto-dismiss').forEach(alert => {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        });
+    }, 3000); // 3 seconds
+</script>
+
+{% endif %}

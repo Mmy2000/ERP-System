@@ -1,22 +1,8 @@
 from django.views.generic import ListView
-from django import forms
-
 from core.mixins import SalesOrAdminMixin
+from .forms import StockMovementSearchForm
 from .models import StockMovement
 from .services import StockMovementService
-
-
-class StockMovementSearchForm(forms.Form):
-    q = forms.CharField(
-        required=False,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Search by product or reference...'})
-    )
-    movement_type = forms.ChoiceField(
-        required=False,
-        choices=[('', 'All Types'), ('sale', 'Sale'), ('return', 'Return'), ('adjustment', 'Adjustment'), ('purchase', 'Purchase')],
-        widget=forms.Select(attrs={'class': 'form-select'})
-    )
-
 
 class StockMovementListView(SalesOrAdminMixin, ListView):
     model = StockMovement

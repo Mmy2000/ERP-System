@@ -29,3 +29,12 @@ class Customer(models.Model):
             total=Sum('total_amount')
         )
         return result['total'] or 0
+    
+    @property
+    def balance(self):
+        """Opening balance minus total confirmed order amounts."""
+        from django.db.models import Sum
+        confirmed_total = self.salesorder_set.filter(
+            status='confirmed'
+        ).aggregate(total=Sum('total_amount'))['total'] or 0
+        return self.opening_balance - confirmed_total

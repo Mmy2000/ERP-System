@@ -85,6 +85,14 @@ class OrderService:
         """Confirm order and reduce stock."""
         if order.status != 'pending':
             raise ValidationError(f'Cannot confirm an order with status: {order.status}')
+        
+        # check customer balance
+        if order.customer.balance < order.total_amount:
+            raise ValidationError(
+                f'Insufficient customer balance. '
+                f'Balance: {order.customer.balance:.2f}, '
+                f'Order total: {order.total_amount:.2f}'
+            )
 
         # Validate stock availability first
         for item in order.items.select_related('product'):
