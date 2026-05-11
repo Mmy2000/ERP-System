@@ -1,3 +1,4 @@
+
 from django.db import models
 
 
@@ -8,8 +9,17 @@ class Product(models.Model):
     cost_price = models.DecimalField(max_digits=12, decimal_places=2)
     selling_price = models.DecimalField(max_digits=12, decimal_places=2)
     stock_qty = models.IntegerField(default=0)
+
     image = models.ImageField(upload_to='products/', blank=True, null=True)
+
+    image_hash = models.CharField(
+        max_length=64,
+        blank=True,
+        null=True,
+    )
+
     is_active = models.BooleanField(default=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -26,5 +36,8 @@ class Product(models.Model):
     @property
     def profit_margin(self):
         if self.selling_price > 0:
-            return ((self.selling_price - self.cost_price) / self.selling_price) * 100
+            return (
+                (self.selling_price - self.cost_price)
+                / self.selling_price
+            ) * 100
         return 0

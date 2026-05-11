@@ -1,7 +1,7 @@
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from .models import Product
-
+import hashlib
 
 class ProductService:
     """All business logic for the Product module."""
@@ -32,20 +32,82 @@ class ProductService:
         ).distinct().order_by('category')
 
     @staticmethod
+    def generate_image_hash(image):
+        hasher = hashlib.sha256()
+
+        for chunk in image.chunks():
+            hasher.update(chunk)
+
+        image.seek(0)
+
+        return hasher.hexdigest()
+
+    @staticmethod
+    def get_existing_image(image, exclude_product=None):
+        """
+        Return existing product image if already uploaded before.
+        """
+        if not image:
+            return None, None
+
+        image_hash = ProductService.generate_image_hash(image)
+
+        qs = Product.objects.filter(image_hash=image_hash)
+
+        if exclude_product:
+            qs = qs.exclude(pk=exclude_product.pk)
+
+        existing_product = qs.first()
+
+        if existing_product:
+            return existing_product.image, image_hash
+
+        return image, image_hash
+    
+    @staticmethod
     @transaction.atomic
     def create(data: dict) -> Product:
+
+        image = data.get('image')
+
+        if image:
+            image_file, image_hash = (
+                ProductService.get_existing_image(image)
+            )
+
+            data['image'] = image_file
+            data['image_hash'] = image_hash
+
         product = Product(**data)
+
         product.full_clean()
         product.save()
+
         return product
 
     @staticmethod
     @transaction.atomic
     def update(product: Product, data: dict) -> Product:
+
+        image = data.get('image')
+
+        if image:
+            image_file, image_hash = (
+                ProductService.get_existing_image(
+                    image,
+                    exclude_product=product
+                )
+            )
+
+            data['image'] = image_file
+            data['image_hash'] = image_hash
+
         for field, value in data.items():
             setattr(product, field, value)
+
         product.full_clean()
         product.save()
+
         return product
 
     @staticmethod
