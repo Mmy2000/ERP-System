@@ -40,7 +40,7 @@ class OrderService:
 
     @staticmethod
     def search(query=None, status=None, customer_id=None):
-        qs = SalesOrder.objects.select_related('customer', 'created_by')
+        qs = OrderService.get_all()
         if query:
             qs = qs.filter(order_number__icontains=query) | \
                  SalesOrder.objects.filter(customer__name__icontains=query).select_related('customer', 'created_by')
@@ -121,6 +121,9 @@ class OrderService:
     @transaction.atomic
     def cancel_order(order: SalesOrder, user) -> SalesOrder:
         """Cancel order and restore stock if was confirmed."""
+
+        if order.created_by != user and not user.is_superuser:
+            raise ValidationError('You do not have permission to cancel this order.')
         if order.status == 'cancelled':
             raise ValidationError('Order is already cancelled.')
 

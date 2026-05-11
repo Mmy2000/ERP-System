@@ -27,6 +27,7 @@ class SalesOrder(models.Model):
 
     def __str__(self):
         return f'{self.order_number} - {self.customer.name}'
+    
 
     def recalculate_total(self):
         from django.db.models import Sum, F, ExpressionWrapper, DecimalField

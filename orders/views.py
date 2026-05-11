@@ -36,6 +36,23 @@ class OrderDetailView(SalesOrAdminMixin, DetailView):
     def get_object(self):
         return OrderService.get_by_id(self.kwargs['pk'])
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        order = self.object
+        user = self.request.user
+
+        context['can_user_cancel'] = (
+            (
+                order.created_by == user
+                or user.is_staff
+                or user.is_superuser
+            )
+            and order.status != 'cancelled'
+        )
+
+        return context
+
 
 class OrderCreateView(SalesOrAdminMixin, CreateView):
     model = SalesOrder
