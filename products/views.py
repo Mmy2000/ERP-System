@@ -7,6 +7,9 @@ from core.mixins import AdminRequiredMixin, SalesOrAdminMixin
 from .models import Product
 from .forms import ProductForm, ProductSearchForm
 from .services import ProductService
+from django.utils import timezone
+from core.exports import build_workbook, workbook_response
+from django.views import View
 
 
 class ProductListView(SalesOrAdminMixin, ListView):
@@ -92,3 +95,40 @@ class ProductDeleteView(AdminRequiredMixin, DeleteView):
         ProductService.delete(self.object)
         messages.success(self.request, f'Product "{self.object.name}" deleted.')
         return redirect(self.success_url)
+    
+
+
+class ProductExportView(AdminRequiredMixin, View):
+    def get(self, request):
+        products = ProductService.get_all_active().order_by('category', 'name')
+
+        rows = [
+            [
+                p.sku,
+                p.name,
+                p.category,
+                float(p.cost_price),
+                float(p.selling_price),
+                float(p.selling_price - p.cost_price),
+                round(float(p.profit_margin), 2),
+                p.stock_qty,
+                'Yes' if p.is_active else 'No',
+                p.created_at.strftime('%Y-%m-%d'),
+            ]
+            for p in products
+        ]
+
+        sheet = {
+            'title': 'Products',
+            'headers': [
+                'SKU', 'Name', 'Category', 'Cost Price ($)', 'Selling Price ($)',
+                'Gross Profit ($)', 'Margin (%)', 'Stock Qty', 'Active', 'Created',
+            ],
+            'rows': rows,
+            'col_widths': [15, 30, 18, 16, 17, 16, 13, 12, 8, 14],
+            'number_formats': {4: '#,##0.00', 5: '#,##0.00', 6: '#,##0.00', 7: '0.00"%"'},
+        }
+
+        wb = build_workbook([sheet])
+        filename = f'products_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        return workbook_response(wb, filename)

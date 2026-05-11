@@ -1,7 +1,6 @@
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, View
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView, DetailView, CreateView, View
 from django.contrib import messages
-from django.urls import reverse_lazy, reverse
+from django.urls import  reverse
 from django.shortcuts import redirect, get_object_or_404
 from django.core.exceptions import ValidationError
 
@@ -10,6 +9,9 @@ from .models import SalesOrder
 from .forms import SalesOrderForm, OrderItemFormSet, OrderSearchForm
 from .services import OrderService
 
+from django.utils import timezone
+from core.exports import build_workbook, workbook_response
+from django.views import View
 
 class OrderListView(SalesOrAdminMixin, ListView):
     model = SalesOrder
@@ -126,3 +128,65 @@ class OrderCancelView(SalesOrAdminMixin, View):
         except ValidationError as e:
             messages.error(request, str(e))
         return redirect(reverse('order_detail', kwargs={'pk': pk}))
+    
+
+
+class OrderExportView(SalesOrAdminMixin, View):
+    def get(self, request):
+        orders = OrderService.get_all().prefetch_related('items__product').order_by('-created_at')
+
+        order_rows = [
+            [
+                o.order_number,
+                o.customer.name,
+                o.customer.customer_code,
+                o.order_date.strftime('%Y-%m-%d'),
+                o.get_status_display(),
+                float(o.total_amount),
+                o.created_by.get_full_name() or o.created_by.username,
+                o.created_at.strftime('%Y-%m-%d %H:%M'),
+                o.notes,
+            ]
+            for o in orders
+        ]
+
+        orders_sheet = {
+            'title': 'Orders',
+            'headers': [
+                'Order #', 'Customer', 'Customer Code', 'Order Date',
+                'Status', 'Total Amount ($)', 'Created By', 'Created At', 'Notes',
+            ],
+            'rows': order_rows,
+            'col_widths': [22, 28, 16, 14, 12, 18, 22, 20, 35],
+            'number_formats': {6: '#,##0.00'},
+        }
+
+        item_rows = []
+        for o in orders:
+            for item in o.items.all():
+                item_rows.append([
+                    o.order_number,
+                    o.customer.name,
+                    o.order_date.strftime('%Y-%m-%d'),
+                    o.get_status_display(),
+                    item.product.sku,
+                    item.product.name,
+                    item.qty,
+                    float(item.price),
+                    float(item.total),
+                ])
+
+        items_sheet = {
+            'title': 'Order Items',
+            'headers': [
+                'Order #', 'Customer', 'Order Date', 'Status',
+                'SKU', 'Product', 'Qty', 'Unit Price ($)', 'Line Total ($)',
+            ],
+            'rows': item_rows,
+            'col_widths': [22, 28, 14, 12, 15, 30, 8, 16, 16],
+            'number_formats': {8: '#,##0.00', 9: '#,##0.00'},
+        }
+
+        wb = build_workbook([orders_sheet, items_sheet])
+        filename = f'orders_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        return workbook_response(wb, filename)

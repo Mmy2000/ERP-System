@@ -10,9 +10,16 @@
         <h5 class="fw-bold mb-0">Customer Directory</h5>
         <p class="text-muted small mb-0">Manage your customer base</p>
     </div>
-    <a href="{% url 'customer_create' %}" class="btn btn-primary">
-        <i class="bi bi-person-plus me-1"></i>Add Customer
-    </a>
+    <div class="d-flex gap-2">
+        {% if user.is_staff or user.is_superuser %}
+        <a href="{% url 'customer_export' %}" class="btn btn-outline-success btn-sm d-flex align-items-center">
+            <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
+        </a>
+        {% endif %}
+        <a href="{% url 'customer_create' %}" class="btn btn-primary">
+            <i class="bi bi-person-plus me-1"></i>Add Customer
+        </a>
+    </div>
 </div>
 
 <!-- Search -->

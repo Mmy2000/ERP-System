@@ -9,6 +9,9 @@ from .models import Customer
 from .forms import CustomerForm, CustomerSearchForm
 from .services import CustomerService
 
+from django.utils import timezone
+from core.exports import build_workbook, workbook_response
+from django.views import View
 
 class CustomerListView(SalesOrAdminMixin, ListView):
     model = Customer
@@ -92,3 +95,41 @@ class CustomerDeleteView(AdminRequiredMixin, DeleteView):
         CustomerService.delete(self.object)
         messages.success(self.request, f'Customer "{self.object.name}" deleted.')
         return redirect(self.success_url)
+    
+
+
+class CustomerExportView(AdminRequiredMixin, View):
+    def get(self, request):
+        customers = CustomerService.get_all_active().order_by('name')
+
+        rows = [
+            [
+                c.customer_code,
+                c.name,
+                c.email,
+                c.phone,
+                c.address,
+                float(c.opening_balance),
+                c.total_orders,
+                float(c.total_spent),
+                float(c.balance),
+                c.created_at.strftime('%Y-%m-%d'),
+            ]
+            for c in customers
+        ]
+
+        sheet = {
+            'title': 'Customers',
+            'headers': [
+                'Code', 'Name', 'Email', 'Phone', 'Address',
+                'Opening Balance ($)', 'Total Orders', 'Total Spent ($)',
+                'Current Balance ($)', 'Member Since',
+            ],
+            'rows': rows,
+            'col_widths': [14, 28, 28, 18, 35, 20, 14, 18, 20, 14],
+            'number_formats': {6: '#,##0.00', 8: '#,##0.00', 9: '#,##0.00'},
+        }
+
+        wb = build_workbook([sheet])
+        filename = f'customers_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        return workbook_response(wb, filename)

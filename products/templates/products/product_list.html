@@ -10,11 +10,16 @@
         <h5 class="fw-bold mb-0">Product Catalog</h5>
         <p class="text-muted small mb-0">Manage your inventory</p>
     </div>
-    {% if user.is_staff or user.is_superuser %}
-    <a href="{% url 'products_create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-circle me-1"></i>Add Product
-    </a>
-    {% endif %}
+    <div class="d-flex gap-2">
+        {% if user.is_staff or user.is_superuser %}
+        <a href="{% url 'products_export' %}" class="btn btn-outline-success btn-sm d-flex align-items-center">
+            <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
+        </a>
+        <a href="{% url 'products_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>Add Product
+        </a>
+        {% endif %}
+    </div>
 </div>
 
 <!-- Search Bar -->
@@ -81,31 +86,13 @@
 {% if is_paginated %}
 <nav class="mt-4">
     <ul class="pagination justify-content-center">
-
         {% if page_obj.has_previous %}
-        <li class="page-item">
-            <a class="page-link"
-               href="?page={{ page_obj.previous_page_number }}">
-               Previous
-            </a>
-        </li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
         {% endif %}
-
-        <li class="page-item active">
-            <span class="page-link">
-                {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
-            </span>
-        </li>
-
+        <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
         {% if page_obj.has_next %}
-        <li class="page-item">
-            <a class="page-link"
-               href="?page={{ page_obj.next_page_number }}">
-               Next
-            </a>
-        </li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
         {% endif %}
-
     </ul>
 </nav>
 {% endif %}
