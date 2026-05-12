@@ -84,7 +84,7 @@ class OrderService:
     def confirm_order(order: SalesOrder, user) -> SalesOrder:
         """Confirm order and reduce stock."""
 
-        if order.created_by != user:
+        if order.created_by != user and not user.is_superuser:
                 raise ValidationError('You do not have permission to confirm this order.')
         if order.status != 'pending':
             raise ValidationError(f'Cannot confirm an order with status: {order.status}')
@@ -125,7 +125,7 @@ class OrderService:
     def cancel_order(order: SalesOrder, user) -> SalesOrder:
         """Cancel order and restore stock if was confirmed."""
 
-        if order.created_by != user:
+        if order.created_by != user and not user.is_superuser:
             raise ValidationError('You do not have permission to cancel this order.')
         if order.status == 'cancelled':
             raise ValidationError('Order is already cancelled.')
