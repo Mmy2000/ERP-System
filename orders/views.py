@@ -69,7 +69,6 @@ class OrderCreateView(SalesOrAdminMixin, CreateView):
             context['item_formset'] = OrderItemFormSet(prefix='items')
         context['title'] = 'Create Sales Order'
 
-        # ADD THIS — build a {product_id: selling_price} map for JS
         from products.models import Product
         context['product_prices'] = {
             p.id: str(p.selling_price)

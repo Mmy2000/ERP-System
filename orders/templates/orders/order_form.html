@@ -123,7 +123,6 @@ document.addEventListener('change', function(e) {
         const priceInput = row.querySelector('input[name$="-price"]');
         const productId = e.target.value;
 
-        // Auto-fill price from map, but only if field is empty or was auto-filled before
         if (productId && productPrices[productId]) {
             priceInput.value = productPrices[productId];
         } else if (!productId) {
