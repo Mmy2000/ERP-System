@@ -2,6 +2,21 @@
 
 A professional Django mini ERP system for managing products, customers, sales orders, and stock movements — built with a clean service layer architecture, class-based views, and Bootstrap 5 templates.
 
+## Live Demo
+
+🚀 Try NexaERP online:
+
+🌐 [NexaERP Live Demo](https://mmy.pythonanywhere.com/)
+
+### Demo Credentials
+
+| Role | Username | Password |
+|---|---|---|
+| Admin | `admin` | `admin123` |
+| Sales | `sales` | `sales123` |
+
+> ⚠️ Demo data resets periodically.
+
 ---
 
 ## Table of Contents
