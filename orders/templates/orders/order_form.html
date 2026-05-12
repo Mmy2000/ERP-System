@@ -115,18 +115,19 @@
 
 {% block extra_js %}
 <script>
-// Product price data (injected from DB on page load via AJAX-like approach)
-const productPrices = {};
+const productPrices = {{ product_prices|safe }};
 
-// Auto-fill price when product is selected
 document.addEventListener('change', function(e) {
     if (e.target.classList.contains('product-select')) {
         const row = e.target.closest('.item-row');
         const priceInput = row.querySelector('input[name$="-price"]');
-        const selectedOption = e.target.options[e.target.selectedIndex];
-        // Price hint from data attribute if available
-        if (selectedOption.dataset.price) {
-            priceInput.value = selectedOption.dataset.price;
+        const productId = e.target.value;
+
+        // Auto-fill price from map, but only if field is empty or was auto-filled before
+        if (productId && productPrices[productId]) {
+            priceInput.value = productPrices[productId];
+        } else if (!productId) {
+            priceInput.value = '';
         }
         recalculate();
     }

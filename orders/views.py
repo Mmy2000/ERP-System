@@ -68,6 +68,14 @@ class OrderCreateView(SalesOrAdminMixin, CreateView):
         else:
             context['item_formset'] = OrderItemFormSet(prefix='items')
         context['title'] = 'Create Sales Order'
+
+        # ADD THIS — build a {product_id: selling_price} map for JS
+        from products.models import Product
+        context['product_prices'] = {
+            p.id: str(p.selling_price)
+            for p in Product.objects.filter(is_active=True).only('id', 'selling_price')
+        }
+
         return context
 
     def form_valid(self, form):
