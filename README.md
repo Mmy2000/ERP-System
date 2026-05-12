@@ -6,7 +6,7 @@ A professional Django mini ERP system for managing products, customers, sales or
 
 🚀 Try NexaERP online:
 
-🌐 [NexaERP Live Demo](https://mmy.pythonanywhere.com/?utm_source=chatgpt.com)
+🌐 [NexaERP Live Demo](https://mmy.pythonanywhere.com/)
 
 ### Demo Credentials
 
