@@ -77,34 +77,36 @@
         <div class="card">
             <div class="card-header"><h6 class="mb-0 fw-semibold">Order Items</h6></div>
             <div class="card-body p-0">
-                <table class="table mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="ps-3">Product</th>
-                            <th>SKU</th>
-                            <th class="text-end">Price</th>
-                            <th class="text-end">Qty</th>
-                            <th class="text-end pe-3">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in order.items.all %}
-                        <tr>
-                            <td class="ps-3 fw-semibold">{{ item.product.name }}</td>
-                            <td class="text-muted small">{{ item.product.sku }}</td>
-                            <td class="text-end">${{ item.price|floatformat:2 }}</td>
-                            <td class="text-end">{{ item.qty }}</td>
-                            <td class="text-end pe-3 fw-semibold">${{ item.total|floatformat:2|intcomma }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                    <tfoot>
-                        <tr class="table-light">
-                            <td colspan="4" class="text-end fw-bold ps-3">Total Amount</td>
-                            <td class="text-end pe-3 fw-bold fs-6 text-primary">${{ order.total_amount|floatformat:2|intcomma }}</td>
-                        </tr>
-                    </tfoot>
-                </table>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Product</th>
+                                <th>SKU</th>
+                                <th class="text-end">Price</th>
+                                <th class="text-end">Qty</th>
+                                <th class="text-end pe-3">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td class="ps-3 fw-semibold">{{ item.product.name }}</td>
+                                <td class="text-muted small">{{ item.product.sku }}</td>
+                                <td class="text-end">${{ item.price|floatformat:2 }}</td>
+                                <td class="text-end">{{ item.qty }}</td>
+                                <td class="text-end pe-3 fw-semibold">${{ item.total|floatformat:2|intcomma }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light">
+                                <td colspan="4" class="text-end fw-bold ps-3">Total Amount</td>
+                                <td class="text-end pe-3 fw-bold fs-6 text-primary">${{ order.total_amount|floatformat:2|intcomma }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
